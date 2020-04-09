@@ -8,11 +8,49 @@ Created on Thu Apr  9 07:46:50 2020
 import time as tm
 import sqlite3
 
+def create_db(dbname):
+    con, c = open_db(dbname)    
+    query = '''CREATE TABLE IF NOT EXISTS authors(
+           id integer PRIMARY KEY AUTOINCREMENT,
+           name text NOT NULL
+           )
+            '''
+    c.execute(query)
+    query = '''CREATE TABLE IF NOT EXISTS doc_types(
+           id integer PRIMARY KEY AUTOINCREMENT,
+           name text NOT NULL,
+           template text NOT NULL
+           )
+         '''
+    c.execute(query)
+    query = '''CREATE TABLE IF NOT EXISTS data(
+           id integer PRIMARY KEY AUTOINCREMENT,
+           title text NOT NULL,
+           doc_name text NOT NULL,
+           author_id integer NOT NULL,
+           doc_type integer NOT NULL,
+           created_at DATE DEFAULT (datetime('now','localtime')),
+           FOREIGN KEY (author_id) REFERENCES authors(id),
+           FOREIGN KEY (doc_type) REFERENCES doc_types(id)
+           )
+         '''
+    c.execute(query)
+    con.commit()
+
+    doc_types = [(1, 'Folie', 'Folie_ECR_'), (2, 'Interner Brief', 'Int_Brief_ECR')]
+    query = '''INSERT INTO doc_types(id, name, template) VALUES (?,?,?)
+        '''
+    c.executemany(query, doc_types)
+    con.commit()
+    authors = [(1, 'Papá'), (2, 'Mamá'), (3, 'Carlos'), (4, 'Amanda'), (5, 'Riqui')]
+    c.executemany('INSERT INTO authors(id, name) VALUES (?,?)', authors)
+    con.commit()
+    con.close()
+
 def open_db(dbname):
     con = sqlite3.connect(dbname)
     c = con.cursor()
     return con, c
-
 
 def get_new_docname(data, dbname):
     con, cursor = open_db(dbname)
