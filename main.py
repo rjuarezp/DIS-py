@@ -1,8 +1,8 @@
 import PySimpleGUI as sg
 import sqlite3
 import os
-import time as tm
 import pandas as pd
+import sql_functions
 
 sg.theme('DarkAmber')
 
@@ -50,48 +50,9 @@ if not os.path.isfile(db_name):
     authors = [(1, 'Papá'), (2, 'Mamá'), (3, 'Carlos'), (4, 'Amanda'), (5, 'Riqui')]
     c.executemany('INSERT INTO authors(id, name) VALUES (?,?)', authors)
     con.commit()
+    con.close()
 else:
-    con = sqlite3.connect(db_name)
-    c = con.cursor()
-
-
-def get_new_docname(data):
-    query = "SELECT template FROM doc_types WHERE name='{}'".format(data)
-    c.execute(query)
-    template_name = c.fetchall()[0][0]
-    year = tm.strftime("%y")
-    query = "SELECT * FROM data WHERE doc_name LIKE '%{}%'".format(template_name+year)
-    c.execute(query)
-    n_doc = str(len(c.fetchall())+1)
-    name = template_name + year + n_doc.zfill(3)
-    return name
-    
-def save_new_data(title, doc_name, author_id, doc_type):
-    query = "INSERT INTO data(title, doc_name, author_id, doc_type) VALUES(?, ?, ?, ?)"
-    values = (title, doc_name, author_id, doc_type)
-    c.execute(query, values)
-    con.commit()
-
-def get_values(table, column):
-    query = 'SELECT DISTINCT {} FROM {} ORDER BY {}'.format(column, table, column)
-    c.execute(query)
-    data = c.fetchall()
-    return [line[0] for line in data]
-
-def get_id(table, pattern):
-    query = "SELECT id FROM {} WHERE name='{}'".format(table,pattern)
-    c.execute(query)
-    return int(c.fetchall()[0][0])
-
-def get_name(table, id):
-    query = "SELECT name FROM {} WHERE id='{}'".format(table,int(id))
-    c.execute(query)
-    return int(c.fetchall()[0][0])
-
-def get_all(table):
-    query = "SELECT * FROM {}".format(table)
-    c.execute(query)
-    return c.fetchall()
+    pass
 
 def display(data):
     content = data.values.tolist()
@@ -114,13 +75,14 @@ def display(data):
     window2.close()
     
 
-authors_list = get_values('authors', 'name')
-doc_types_list = get_values('doc_types','name')
+authors_list = sql_functions.get_values('authors', 'name', db_name)
+doc_types_list = sql_functions.get_values('doc_types','name', db_name)
     
 layout = [
         [sg.Text('Author', **cfg_left), sg.Combo(authors_list, key='-AUTHOR-',**cfg_right)],
         [sg.Text('Title', **cfg_left), sg.InputText(key='-TITLE-', **cfg_right)],
         [sg.Text('Document type', **cfg_left), sg.Combo(doc_types_list, key='-DOC_TYPE-', **cfg_right)],
+        [sg.Text('New document name', **cfg_left), sg.Text(size=(30,1), key='-DOC_NAME-'), sg.Button('Copy to clipboard', key='-CLIPB-')],
         [sg.Output(size=(70,5), key='-OUTPUT-')],
         [sg.Button('Search'), sg.Button('Save new data'), sg.Button('Quit')]
         ]
@@ -137,13 +99,14 @@ while True:
             print('Please enter a valid Author and/or Document type')
         else:
             title = values['-TITLE-']
-            doc_name = get_new_docname(values['-DOC_TYPE-'])
-            author_id = get_id('authors', values['-AUTHOR-'])
-            doc_type = get_id('doc_types', values['-DOC_TYPE-'])
-            save_new_data(title, doc_name, author_id, doc_type)
+            doc_name = sql_functions.get_new_docname(values['-DOC_TYPE-'], db_name)
+            author_id = sql_functions.get_id('authors', values['-AUTHOR-'], db_name)
+            doc_type = sql_functions.get_id('doc_types', values['-DOC_TYPE-'], db_name)
+            sql_functions.save_new_data(title, doc_name, author_id, doc_type, db_name)
             print('Data sucessfully saved!')
 
     elif event == 'Search':
+        con, cursor = sql_functions.open_db(db_name)
         window.FindElement('-OUTPUT-').Update('')
         query = '''SELECT
                          title,
@@ -157,6 +120,7 @@ while True:
                          INNER JOIN doc_types ON doc_types.id = data.doc_type;
                 '''
         data = pd.read_sql_query(query, con)
+        con.close()
         data = data[data['title'].str.contains(values['-TITLE-'])]
         data = data[data['author'].str.contains(values['-AUTHOR-'])]
         data = data[data['doc_type'].str.contains(values['-DOC_TYPE-'])]
