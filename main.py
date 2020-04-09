@@ -13,7 +13,9 @@ cfg_left = {'size': (20,1)}
 cfg_right = {'size': (50,1)}
 
 # Create Database
-db_name = 'data.sqlite3'
+data_path = os.getcwd()
+docs_path = os.path.join(data_path, 'documents')
+db_name = os.path.join(data_path, 'data.sqlite3')
 
 if not os.path.isfile(db_name):
     sql_functions.create_db(db_name)
@@ -31,6 +33,7 @@ def display(data):
                       key = '-TABLE-')],
             [sg.Button('Sort by Title'), sg.Button('Sort by Doc_type'),
              sg.Button('Sort by Author'), sg.Button('Sort by Date'),
+             sg.Button('Open marked documents'),
              sg.Button('Quit')]
             ]
     window2 = sg.Window('Data', layout2, grab_anywhere=False)
@@ -51,6 +54,14 @@ def display(data):
         elif event2 == 'Sort by Title':
             ascending = not ascending
             table_functions.sort_table(window2, data, 'title', '-TABLE-', ascending)
+        elif event2 == 'Open marked documents':
+            if len(values2['-TABLE-']) == 0:
+                print('Please select documents to open')
+            else:
+                 doc_list = [data.loc[x,'doc_name'] for x in values2['-TABLE-']]
+                 doc_type = [data.loc[x, 'doc_type'] for x in values2['-TABLE-']]
+                 table_functions.open_documents(docs_path, doc_list, doc_type, db_name)
+                 print(doc_list)
             
             
     window2.close()

@@ -37,7 +37,7 @@ def create_db(dbname):
     c.execute(query)
     con.commit()
 
-    doc_types = [(1, 'Folie', 'Folie_ECR_'), (2, 'Interner Brief', 'Int_Brief_ECR')]
+    doc_types = [(1, 'Folie', 'Folie_ECR_'), (2, 'Interner_Brief', 'Int_Brief_ECR')]
     query = '''INSERT INTO doc_types(id, name, template) VALUES (?,?,?)
         '''
     c.executemany(query, doc_types)
@@ -101,6 +101,14 @@ def get_name(table, id, dbname):
 def get_all(table, dbname):
     con, cursor = open_db(dbname)
     query = "SELECT * FROM {}".format(table)
+    cursor.execute(query)
+    data = cursor.fetchall()
+    con.close()
+    return data
+
+def get_cross(table, column, column_match, match, dbname):
+    con, cursor = open_db(dbname)
+    query = "SELECT {} FROM {} WHERE {}='{}'".format(column, table, column_match, match)
     cursor.execute(query)
     data = cursor.fetchall()
     con.close()
