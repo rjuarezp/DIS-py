@@ -4,6 +4,7 @@ import pandas as pd
 import clipboard
 
 import sql_functions
+import table_functions
 
 sg.theme('DarkAmber')
 
@@ -28,16 +29,30 @@ def display(data):
                       display_row_numbers=False,
                       num_rows=min(25, len(content)),
                       key = '-TABLE-')],
-             [sg.Button('Sort by Author'), sg.Button('Quit')]
+            [sg.Button('Sort by Title'), sg.Button('Sort by Doc_type'),
+             sg.Button('Sort by Author'), sg.Button('Sort by Date'),
+             sg.Button('Quit')]
             ]
     window2 = sg.Window('Data', layout2, grab_anywhere=False)
+    ascending = False
     while True:
         event2, values2 = window2.read(timeout=100)
         if event2 in (None, 'Quit'):
             break
+        elif event2 == 'Sort by Doc_type':
+            ascending = not ascending
+            table_functions.sort_table(window2, data, 'doc_type', '-TABLE-', ascending)
         elif event2 == 'Sort by Author':
-            pass
-            #data.sort_values(by)
+            ascending = not ascending
+            table_functions.sort_table(window2, data, 'author', '-TABLE-', ascending)
+        elif event2 == 'Sort by Date':
+            ascending = not ascending
+            table_functions.sort_table(window2, data, 'created_at', '-TABLE-', ascending)
+        elif event2 == 'Sort by Title':
+            ascending = not ascending
+            table_functions.sort_table(window2, data, 'title', '-TABLE-', ascending)
+            
+            
     window2.close()
 
 authors_list = sql_functions.get_values('authors', 'name', db_name)
@@ -95,8 +110,6 @@ while True:
         else:
             display(data)
     elif event == 'Copy to clipboard':
-        window.FindElement('-OUTPUT-').Update('')
-        print(values)
         clipboard.copy(window['-DOC_NAME-'].DisplayText)
 
 window.close()
