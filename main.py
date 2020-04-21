@@ -60,9 +60,9 @@ def display(data):
             if len(values2['-TABLE-']) == 0:
                 print('Please select documents to open')
             else:
-                 doc_list = [data.loc[x,'doc_name'] for x in values2['-TABLE-']]
-                 doc_type = [data.loc[x, 'doc_type'] for x in values2['-TABLE-']]
-                 table_functions.open_documents(docs_path, doc_list, doc_type, db_name)            
+                doc_list = [data.loc[x,'doc_name'] for x in values2['-TABLE-']]
+                doc_type = [data.loc[x, 'doc_type'] for x in values2['-TABLE-']]
+                table_functions.open_documents(docs_path, doc_list, doc_type, db_name)            
             
     window2.close()
 
@@ -74,7 +74,7 @@ layout = [
         [sg.Text('Title', **cfg_left), sg.InputText(key='-TITLE-', **cfg_right)],
         [sg.Text('Document type', **cfg_left), sg.Combo(doc_types_list, key='-DOC_TYPE-', **cfg_right)],
         [sg.Text('New document name', **cfg_left), sg.Text(size=(30,1), key='-DOC_NAME-'), sg.Button('Copy to clipboard')],
-        [sg.Output(size=(70,5), key='-OUTPUT-')],
+        [sg.Output(size=(75,5), key='-OUTPUT-')],
         [sg.Button('Search'), sg.Button('Save new data'), sg.Button('Quit')]
         ]
 
@@ -116,6 +116,7 @@ while True:
         data = data[data['title'].str.contains(values['-TITLE-'])]
         data = data[data['author'].str.contains(values['-AUTHOR-'])]
         data = data[data['doc_type'].str.contains(values['-DOC_TYPE-'])]
+        data.reset_index(drop=True, inplace=True)
         if data.shape[0] < 1:
             print('No data found')
         else:
