@@ -19,7 +19,8 @@ def create_db(dbname):
     query = '''CREATE TABLE IF NOT EXISTS doc_types(
            id integer PRIMARY KEY AUTOINCREMENT,
            name text NOT NULL,
-           template text NOT NULL
+           template text NOT NULL,
+           extension text NOT NULL
            )
          '''
     c.execute(query)
@@ -37,12 +38,12 @@ def create_db(dbname):
     c.execute(query)
     con.commit()
 
-    doc_types = [(1, 'Folie', 'Folie_ECR_'), (2, 'Interner_Brief', 'Int_Brief_ECR')]
-    query = '''INSERT INTO doc_types(id, name, template) VALUES (?,?,?)
+    doc_types = [(1, 'Folie', 'Folie_ECR_', '.pptx'), (2, 'Interner_Brief', 'Int_Brief_ECR_', '.docx')]
+    query = '''INSERT INTO doc_types(id, name, template, extension) VALUES (?,?,?,?)
         '''
     c.executemany(query, doc_types)
     con.commit()
-    authors = [(1, 'Papá'), (2, 'Mamá'), (3, 'Carlos'), (4, 'Amanda'), (5, 'Riqui')]
+    authors = [(1, 'Author A'), (2, 'Author B'), (3, 'Author C'), (4, 'Author D'), (5, 'Author E')]
     c.executemany('INSERT INTO authors(id, name) VALUES (?,?)', authors)
     con.commit()
     con.close()
@@ -61,7 +62,7 @@ def get_new_docname(data, dbname):
     query = "SELECT * FROM data WHERE doc_name LIKE '%{}%'".format(template_name+year)
     cursor.execute(query)
     n_doc = str(len(cursor.fetchall())+1)
-    name = template_name + year + n_doc.zfill(3)
+    name = template_name + year + n_doc.zfill(4)
     con.close()
     return name
     
@@ -103,6 +104,14 @@ def get_all(table, dbname):
     query = "SELECT * FROM {}".format(table)
     cursor.execute(query)
     data = cursor.fetchall()
+    con.close()
+    return data
+
+def get_year(dbname, doc_name):
+    con, cursor = open_db(dbname)
+    query = "SELECT strftime('%Y', created_at) as 'year' FROM data WHERE doc_name='{}'".format(doc_name)
+    cursor.execute(query)
+    data = cursor.fetchall()    
     con.close()
     return data
 

@@ -29,6 +29,8 @@ def display(data):
             [sg.Table(values=content,
                       headings=headers_list,
                       display_row_numbers=False,
+                      auto_size_columns=True,
+                      justification='left',
                       num_rows=min(25, len(content)),
                       key = '-TABLE-')],
             [sg.Button('Sort by Title'), sg.Button('Sort by Doc_type'),
@@ -60,9 +62,7 @@ def display(data):
             else:
                  doc_list = [data.loc[x,'doc_name'] for x in values2['-TABLE-']]
                  doc_type = [data.loc[x, 'doc_type'] for x in values2['-TABLE-']]
-                 table_functions.open_documents(docs_path, doc_list, doc_type, db_name)
-                 print(doc_list)
-            
+                 table_functions.open_documents(docs_path, doc_list, doc_type, db_name)            
             
     window2.close()
 
