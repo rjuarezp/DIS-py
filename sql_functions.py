@@ -12,7 +12,8 @@ def create_db(dbname):
     con, c = open_db(dbname)    
     query = '''CREATE TABLE IF NOT EXISTS authors(
            id integer PRIMARY KEY AUTOINCREMENT,
-           name text NOT NULL
+           name text NOT NULL,
+           NTuser_id text NOT NULL
            )
             '''
     c.execute(query)
@@ -43,8 +44,8 @@ def create_db(dbname):
         '''
     c.executemany(query, doc_types)
     con.commit()
-    authors = [(1, 'Author A'), (2, 'Author B'), (3, 'Author C'), (4, 'Author D'), (5, 'Author E')]
-    c.executemany('INSERT INTO authors(id, name) VALUES (?,?)', authors)
+    authors = [(1, 'Author A', 'zor3ho'), (2, 'Author B', 'jui3ho'), (3, 'Author C', 'ert3fe'), (4, 'Author D', 'ert2ho'), (5, 'Author E', 'jun2ho')]
+    c.executemany('INSERT INTO authors(id, name, NTuser_id) VALUES (?,?,?)', authors)
     con.commit()
     con.close()
 
@@ -118,6 +119,14 @@ def get_year(dbname, doc_name):
 def get_cross(table, column, column_match, match, dbname):
     con, cursor = open_db(dbname)
     query = "SELECT {} FROM {} WHERE {}='{}'".format(column, table, column_match, match)
+    cursor.execute(query)
+    data = cursor.fetchall()
+    con.close()
+    return data
+
+def get_authorname(dbname, userid):
+    con, cursor = open_db(dbname)
+    query = "SELECT name FROM authors WHERE NTuser_id='{}'".format(userid)
     cursor.execute(query)
     data = cursor.fetchall()
     con.close()

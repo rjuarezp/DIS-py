@@ -4,9 +4,9 @@ import pandas as pd
 import clipboard
 
 import sql_functions
-import table_functions
+import gui_functions
 
-sg.theme('DarkAmber')
+sg.theme('LightGreen')
 
 cfg_left = {'size': (20,1)}
 
@@ -22,55 +22,18 @@ if not os.path.isfile(db_name):
 else:
     pass
 
-def display(data):
-    content = data.values.tolist()
-    headers_list = data.columns.tolist()
-    layout2 = [
-            [sg.Table(values=content,
-                      headings=headers_list,
-                      display_row_numbers=False,
-                      auto_size_columns=True,
-                      justification='left',
-                      num_rows=min(25, len(content)),
-                      key = '-TABLE-')],
-            [sg.Button('Sort by Title'), sg.Button('Sort by Doc_type'),
-             sg.Button('Sort by Author'), sg.Button('Sort by Date'),
-             sg.Button('Open marked documents'),
-             sg.Button('Quit')]
-            ]
-    window2 = sg.Window('Data', layout2, grab_anywhere=False)
-    ascending = False
-    while True:
-        event2, values2 = window2.read(timeout=100)
-        if event2 in (None, 'Quit'):
-            break
-        elif event2 == 'Sort by Doc_type':
-            ascending = not ascending
-            table_functions.sort_table(window2, data, 'doc_type', '-TABLE-', ascending)
-        elif event2 == 'Sort by Author':
-            ascending = not ascending
-            table_functions.sort_table(window2, data, 'author', '-TABLE-', ascending)
-        elif event2 == 'Sort by Date':
-            ascending = not ascending
-            table_functions.sort_table(window2, data, 'created_at', '-TABLE-', ascending)
-        elif event2 == 'Sort by Title':
-            ascending = not ascending
-            table_functions.sort_table(window2, data, 'title', '-TABLE-', ascending)
-        elif event2 == 'Open marked documents':
-            if len(values2['-TABLE-']) == 0:
-                print('Please select documents to open')
-            else:
-                doc_list = [data.loc[x,'doc_name'] for x in values2['-TABLE-']]
-                doc_type = [data.loc[x, 'doc_type'] for x in values2['-TABLE-']]
-                table_functions.open_documents(docs_path, doc_list, doc_type, db_name)            
-            
-    window2.close()
-
 authors_list = sql_functions.get_values('authors', 'name', db_name)
 doc_types_list = sql_functions.get_values('doc_types','name', db_name)
+user_id = os.getlogin().lower()
+default_author = sql_functions.get_authorname(db_name,user_id)[0][0]
+
+menu_def = [['&Configuration', ['Change config file', 'Admin Database']],
+            ['&About', ['License', 'DIS-Py']]
+           ]
     
 layout = [
-        [sg.Text('Author', **cfg_left), sg.Combo(authors_list, key='-AUTHOR-',**cfg_right)],
+        [sg.Menu(menu_def, tearoff=True, key='-MENU-')],
+        [sg.Text('Author', **cfg_left), sg.Combo(authors_list, default_value=default_author, key='-AUTHOR-',**cfg_right)],
         [sg.Text('Title', **cfg_left), sg.InputText(key='-TITLE-', **cfg_right)],
         [sg.Text('Document type', **cfg_left), sg.Combo(doc_types_list, key='-DOC_TYPE-', **cfg_right)],
         [sg.Text('New document name', **cfg_left), sg.Text(size=(30,1), key='-DOC_NAME-'), sg.Button('Copy to clipboard')],
@@ -78,7 +41,7 @@ layout = [
         [sg.Button('Search'), sg.Button('Save new data'), sg.Button('Quit')]
         ]
 
-window = sg.Window('DIS-Python', layout)
+window = sg.Window('DIS-Python - User: {}'.format(user_id), layout)
 
 while True:
     event, values = window.read(timeout=100)
@@ -120,7 +83,7 @@ while True:
         if data.shape[0] < 1:
             print('No data found')
         else:
-            display(data)
+            gui_functions.display_searchresults(data, docs_path, db_name)
     elif event == 'Copy to clipboard':
         clipboard.copy(window['-DOC_NAME-'].DisplayText)
 
