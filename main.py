@@ -75,6 +75,8 @@ while True:
                          INNER JOIN doc_types ON doc_types.id = data.doc_type;
                 '''
         data = pd.read_sql_query(query, con)
+        data['created_at'] = pd.to_datetime(data.created_at)
+        data['created_at'] = data['created_at'].dt.strftime('%d.%m.%Y %H:%M:%S')
         con.close()
         data = data[data['title'].str.contains(values['-TITLE-'])]
         data = data[data['author'].str.contains(values['-AUTHOR-'])]

@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 import table_functions
 import sql_functions
+import time as tm
 
 cfg_left = {'size': (20,1)}
 
@@ -25,7 +26,8 @@ def display_searchresults(data, docs_path, dbname):
             ]
     window2 = sg.Window('Data', layout2, grab_anywhere=False)
     ascending = False
-    while True:
+    window2_status = True
+    while window2_status:
         event2, values2 = window2.read(timeout=100)
         if event2 in (None, 'Quit'):
             break
@@ -56,16 +58,21 @@ def display_searchresults(data, docs_path, dbname):
                 curr_author = data.loc[values2['-TABLE-'][0], 'author']
                 curr_title = data.loc[values2['-TABLE-'][0], 'title']
                 curr_date = data.loc[values2['-TABLE-'][0], 'created_at']
+                curr_docname = data.loc[values2['-TABLE-'][0], 'doc_name']
                 print(curr_author, curr_title, curr_date)
-                edit_document(curr_author, curr_title, curr_date, dbname)
-            
+                edit_document(curr_author, curr_title, curr_date, curr_docname, dbname)
+                window2_status = False
+                
     window2.close()
 
-def edit_document(curr_author, curr_title, curr_date, dbname):
+def edit_document(curr_author, curr_title, curr_date, curr_docname, dbname):
     auth_list = sql_functions.get_values('authors', 'name', dbname)
     layout3 = [
               [sg.Text('Author', **cfg_left), sg.Combo(auth_list, key='-ed_AUTHOR-', readonly=True, default_value=curr_author, **cfg_right)],
               [sg.Text('Title', **cfg_left), sg.InputText(key='-ed_title-', default_text=curr_title, **cfg_right)],
+              [sg.Text('Document number', **cfg_left), sg.Text(curr_docname, key='-doc_name-', **cfg_right)],
+              [sg.Text('Date', **cfg_left), sg.Text(curr_date, key='-date-', **cfg_right)],
+              [sg.Output(size=(75,5), key='-ed_OUTPUT-')],
               [sg.Button('Update data & Exit'), sg.Button('Cancel')]
               ]
     
@@ -76,7 +83,21 @@ def edit_document(curr_author, curr_title, curr_date, dbname):
         if event3 in (None, 'Cancel'):
             break
         elif event3 == 'Update data & Exit':
-            
-            pass
+            # Update title
+            new_title = values3['-ed_title-']
+            update1 = sql_functions.update_row(dbname, 'data', 'title', new_title, 'doc_name', curr_docname)
+            # Update Author, if needed
+            new_author = values3['-ed_AUTHOR-']
+            print(new_author)
+            new_author_id = sql_functions.get_id('authors', new_author, dbname)
+            print(new_author_id)
+            update2 = sql_functions.update_row(dbname, 'data', 'author_id', new_author_id, 'doc_name', curr_docname)
+            if update1 and update2:
+                print('Update successfull!!!')
+                tm.sleep(1)
+                break
+            else:
+                print("Update error!!!!")
+
     window3.close()
     

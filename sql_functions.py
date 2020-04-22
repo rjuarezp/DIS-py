@@ -131,3 +131,15 @@ def get_authorname(dbname, userid):
     data = cursor.fetchall()
     con.close()
     return data
+
+def update_row(dbname, table, update_column, value, match_column, match):
+    try:
+        con, cursor = open_db(dbname)
+        query = "UPDATE {} SET {} = '{}' WHERE {}='{}'".format(table, update_column, value, match_column, match)
+        cursor.execute(query)
+        con.commit()
+        con.close()
+        return True
+    except:
+        return False
+    
