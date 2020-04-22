@@ -88,5 +88,7 @@ while True:
             gui_functions.display_searchresults(data, docs_path, db_name)
     elif event == 'Copy to clipboard':
         clipboard.copy(window['-DOC_NAME-'].DisplayText)
+    elif event == 'Change config file':
+        gui_functions.config_file()
 
 window.close()

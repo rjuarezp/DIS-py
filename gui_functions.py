@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 import table_functions
 import sql_functions
-import time as tm
 
 cfg_left = {'size': (20,1)}
 
@@ -15,6 +14,7 @@ def display_searchresults(data, docs_path, dbname):
                       headings=headers_list,
                       display_row_numbers=False,
                       auto_size_columns=True,
+                      max_col_width=100,
                       justification='left',
                       num_rows=min(25, len(content)),
                       key = '-TABLE-')],
@@ -24,7 +24,7 @@ def display_searchresults(data, docs_path, dbname):
              sg.Button('Edit data'),
              sg.Button('Quit')]
             ]
-    window2 = sg.Window('Data', layout2, grab_anywhere=False)
+    window2 = sg.Window('DIS-Pyton - Data', layout2, grab_anywhere=False)
     ascending = False
     window2_status = True
     while window2_status:
@@ -76,7 +76,7 @@ def edit_document(curr_author, curr_title, curr_date, curr_docname, dbname):
               [sg.Button('Update data & Exit'), sg.Button('Cancel')]
               ]
     
-    window3 = sg.Window('Edit data', layout3)
+    window3 = sg.Window('DIS-Python - Edit data', layout3)
     
     while True:
         event3, values3 = window3.read(timeout=100)
@@ -94,10 +94,39 @@ def edit_document(curr_author, curr_title, curr_date, curr_docname, dbname):
             update2 = sql_functions.update_row(dbname, 'data', 'author_id', new_author_id, 'doc_name', curr_docname)
             if update1 and update2:
                 print('Update successfull!!!')
-                tm.sleep(1)
                 break
             else:
                 print("Update error!!!!")
 
     window3.close()
+    
+def admin_database(dbname):
+    layout4 = [
+              [sg.Text('Select Table', **cfg_left), sg.Combo(['authors', 'doc_types'], key='-TABLE-', **cfg_right)],
+              [sg.Button('Quit')]
+              ]
+    
+    window4 = sg.Window('DIS-Python - Edit Database', layout4)
+    
+    while True:
+        event4, values4= window4.read(timeout=100)
+        if event4 in (None, 'Quit'):
+            break
+    
+    window4.close()
+    
+def config_file():
+    layout5 = [
+              [sg.Text('Database path', **cfg_left), sg.InputText(key='-DB_FILE-'), sg.FileBrowse(target='-DB_FILE-', file_types=(("Sqlite3", "*.sqlite3"), ("All files", "*.*"),))],
+              [sg.Button('Save configuration & Quit'), sg.Button('Quit')]
+              ]
+    
+    window5 = sg.Window('DIS-Python - Configuration', layout5)
+    
+    while True:
+        event5, value5 = window5.read(timeout=100)
+        if event5 in (None, 'Quit'):
+            break
+    
+    window5.close()
     
